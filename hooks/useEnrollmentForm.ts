@@ -36,15 +36,15 @@ export function useEnrollmentForm() {
   const [formData, setFormData] = useState<typeof INITIAL_FORM_DATA>(INITIAL_FORM_DATA);
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('🚀 STEP 1: Form submit handler called');
     setIsSubmitting(true);
+    setErrorMessage('');
 
     try {
-      console.log('🚀 STEP 2: Building application data object');
-      
       // Map form data to database column names
       const applicationData = {
         full_name: formData.fullName,
@@ -74,59 +74,25 @@ export function useEnrollmentForm() {
         declaration_accepted: formData.declaration,
       };
 
-      console.log('✅ STEP 2 COMPLETE: Data object ready');
-      console.log('📋 DATA TO INSERT:', applicationData);
-
-      console.log('🚀 STEP 3: Calling Supabase insert...');
-      console.log('📍 Table: "applications"');
-      console.log('🔗 Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-
       // Insert data into Supabase
       const { data, error } = await supabase
         .from('applications')
         .insert([applicationData])
         .select();
 
-      console.log('✅ STEP 3 COMPLETE: Supabase responded');
-      console.log('📊 Supabase Response:', { data, error });
-
       if (error) {
-        console.error('❌ SUPABASE ERROR DETECTED');
-        console.error('Error Code:', error.code);
-        console.error('Error Message:', error.message);
-        console.error('Error Details:', JSON.stringify(error, null, 2));
-        
-        // Check for common errors
-        if (error.code === '42501') {
-          alert('❌ RLS BLOCKED: Row Level Security is preventing inserts.\n\nFix: Go to Supabase → Policies → Add INSERT policy for "applications" table.');
-        } else if (error.code === '42P01') {
-          alert('❌ TABLE NOT FOUND: The "applications" table does not exist in Supabase.\n\nFix: Create the table using SQL in Supabase dashboard.');
-        } else if (error.code === '42703') {
-          alert('❌ COLUMN NOT FOUND: One of the columns does not exist.\n\nError: ' + error.message);
-        } else {
-          alert(`❌ Supabase Error (${error.code}): ${error.message}`);
-        }
+        setErrorMessage(error.message || 'An error occurred while submitting your application.');
       } else if (data && data.length > 0) {
-        console.log('✅ SUCCESS: Row inserted into Supabase');
-        console.log('🎉 Inserted Row:', data[0]);
-        alert('✅ Form submitted successfully! Your application has been saved to Supabase.');
-
+        setIsSuccess(true);
         // Reset form
         setFormData(INITIAL_FORM_DATA);
         setPhotoPreview('');
       } else {
-        console.warn('⚠️  WARNING: No error but no data returned');
-        console.log('Response:', { data, error });
-        alert('⚠️  Form submitted but no confirmation. Check console.');
+        setErrorMessage('An unexpected error occurred. Please try again.');
       }
     } catch (err) {
-      console.error('❌ UNEXPECTED ERROR IN TRY/CATCH');
-      console.error('Error Type:', err instanceof Error ? err.name : typeof err);
-      console.error('Error Message:', err instanceof Error ? err.message : String(err));
-      console.error('Full Error:', err);
-      alert('❌ An unexpected error occurred. Check browser console (F12) for details.');
+      setErrorMessage('An unexpected error occurred. Please try again.');
     } finally {
-      console.log('🏁 STEP 4: Cleanup - setIsSubmitting(false)');
       setIsSubmitting(false);
     }
   };
@@ -147,5 +113,9 @@ export function useEnrollmentForm() {
     handleSubmit,
     handlePhotoSelect,
     isSubmitting,
+    isSuccess,
+    setIsSuccess,
+    errorMessage,
+    setErrorMessage,
   };
 }

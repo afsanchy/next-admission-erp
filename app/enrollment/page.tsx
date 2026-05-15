@@ -11,6 +11,10 @@ export default function EnrollmentPage() {
     handlePhotoSelect,
     handleSubmit,
     isSubmitting,
+    isSuccess,
+    setIsSuccess,
+    errorMessage,
+    setErrorMessage,
   } = useEnrollmentForm();
 
   return (
@@ -23,6 +27,10 @@ export default function EnrollmentPage() {
           handlePhotoSelect={handlePhotoSelect}
           handleSubmit={handleSubmit}
           isSubmitting={isSubmitting}
+          isSuccess={isSuccess}
+          setIsSuccess={setIsSuccess}
+          errorMessage={errorMessage}
+          setErrorMessage={setErrorMessage}
         />
       </div>
     </div>
